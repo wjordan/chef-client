@@ -7,29 +7,7 @@ driver:
   privileged: true
 
 platforms:
-- name: centos-6
-  driver:
-    image: centos:6
-    platform: rhel
-    run_command: /sbin/init
-    provision_command:
-      - /usr/bin/yum install -y initscripts net-tools wget
-- name: centos-7
-  driver:
-    image: centos:7
-    platform: rhel
-    run_command: /usr/lib/systemd/systemd
-    provision_command:
-      - /bin/yum install -y initscripts net-tools wget
-- name: ubuntu-12.04
-  driver:
-    image: ubuntu-upstart:12.04
-    platform: ubuntu
-    disable_upstart: false
-    run_command: /sbin/init
-    provision_command:
-      - /usr/bin/apt-get update
-      - /usr/bin/apt-get install apt-transport-https net-tools -y
+
 - name: ubuntu-14.04
   driver:
     image: ubuntu-upstart:14.04
@@ -45,22 +23,12 @@ suites:
   run_list:
   - recipe[chef-client::config]
   - recipe[chef-client::init_service]
-  includes: ["ubuntu-12.04", "ubuntu-14.04", "centos-6"]
-
-- name: service_runit
-  run_list:
-  - recipe[runit]
-  - recipe[chef-client::runit_service]
-
-- name: service_systemd
-  run_list:
-  - recipe[chef-client::systemd_service]
-  includes: ["centos-7"]
+#  includes: ["ubuntu-12.04", "ubuntu-14.04", "centos-6"]
 
 - name: service_upstart
   run_list:
   - recipe[chef-client::upstart_service]
-  includes: ["ubuntu-12.04", "ubuntu-14.04"]
+#  includes: ["ubuntu-12.04", "ubuntu-14.04"]
 
 - name: cron
   run_list:
@@ -74,3 +42,26 @@ suites:
 - name: delete_validation
   run_list:
   - recipe[chef-client::delete_validation]
+
+- name: upgrade
+  steps:
+  - run_list:
+    - recipe[chef-client::config]
+    - recipe[chef-client::upstart_service]
+    provisioner:
+      name: chef_interval
+      require_chef_omnibus: 11.18.12
+    attributes:
+      chef_client:
+        log_dir: /var/log/chef
+  - run_list:
+    - recipe[chef-client::config]
+    - recipe[chef-client::upstart_service]
+    - recipe[omnibus_updater]
+    provisioner:
+      name: chef_interval
+      require_chef_omnibus: 11.18.12
+    attributes:
+      omnibus_updater:
+        restart_chef_service: true
+#        pid_file: /run/chef/client.pid

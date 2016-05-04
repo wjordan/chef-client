@@ -16,9 +16,12 @@ group :unit do
 end
 
 group :kitchen_common do
-  gem 'test-kitchen', '~> 1.5'
+#  gem 'test-kitchen', '~> 1.5', github: 'wjordan/test-kitchen', branch: 'cdo'
+  gem 'test-kitchen', '~> 1.5', path: '../test-kitchen'
 end
 
 group :kitchen_vagrant do
   gem 'kitchen-vagrant', '~> 0.19'
 end
+
+gem 'kitchen-docker'
